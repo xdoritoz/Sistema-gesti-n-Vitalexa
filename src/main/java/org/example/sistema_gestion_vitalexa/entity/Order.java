@@ -79,6 +79,12 @@ public class Order {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    // 🔥 CONSTRUCTOR REAL
+    public Order(User vendedor, Client cliente) {
+        this.vendedor = vendedor;
+        this.cliente = cliente;
+    }
+
 
 
 

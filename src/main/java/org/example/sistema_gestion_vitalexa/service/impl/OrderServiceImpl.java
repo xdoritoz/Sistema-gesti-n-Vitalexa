@@ -2,87 +2,117 @@ package org.example.sistema_gestion_vitalexa.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.sistema_gestion_vitalexa.dto.OrderItemRequestDTO;
 import org.example.sistema_gestion_vitalexa.dto.OrderRequestDto;
 import org.example.sistema_gestion_vitalexa.dto.OrderResponse;
 import org.example.sistema_gestion_vitalexa.entity.*;
 import org.example.sistema_gestion_vitalexa.enums.OrdenStatus;
 import org.example.sistema_gestion_vitalexa.exceptions.BusinessExeption;
-import org.example.sistema_gestion_vitalexa.repository.ClientRepository;
-import org.example.sistema_gestion_vitalexa.repository.OrdenItemRepository;
+import org.example.sistema_gestion_vitalexa.mapper.OrderMapper;
 import org.example.sistema_gestion_vitalexa.repository.OrdenRepository;
-import org.example.sistema_gestion_vitalexa.repository.ProductRepository;
+import org.example.sistema_gestion_vitalexa.repository.UserRepository;
+import org.example.sistema_gestion_vitalexa.service.ClientService;
 import org.example.sistema_gestion_vitalexa.service.OrdenService;
+import org.example.sistema_gestion_vitalexa.service.ProductService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class OrderServiceImpl implements OrdenService {
-    private final OrdenRepository orderRepository;
-    private final OrdenItemRepository orderItemRepository;
-    private final ProductRepository productRepository;
-    private final ClientRepository clientRepository;
-    private final UserServiceImpl userService;
-    private final ClientServiceImpl clientService;
-    private final ProductServiceImpl productService;
 
+    private final OrdenRepository ordenRepository;
+    private final ProductService productService;
+    private final ClientService clientService;
+    private final UserRepository userRepository;
+    private final OrderMapper orderMapper;
+
+    // =========================
+    // CREATE ORDER (VENDEDOR)
+    // =========================
     @Override
-    @Transactional
-    public Order confirmarVenta(Order order) {
+    public OrderResponse createOrder(OrderRequestDto request, String username) {
 
-        if (order.getItems() == null || order.getItems().isEmpty()) {
+        if (request.items() == null || request.items().isEmpty()) {
             throw new BusinessExeption("La venta debe tener al menos un producto");
         }
 
-        // Validar stock y calcular totales
-        for (OrderItem item : order.getItems()) {
+        User vendedor = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessExeption("Vendedor no encontrado"));
 
-            Product product = productRepository.findById(item.getProduct().getId())
-                    .orElseThrow(() -> new BusinessExeption("Producto no encontrado"));
+        Client client = clientService.findEntityById(request.clientId());
 
-            if (product.getStock() < item.getCantidad()) {
-                throw new BusinessExeption(
-                        "Stock insuficiente para el producto: " + product.getNombre()
-                );
-            }
+        Order order = new Order(vendedor, client);
 
-            // Descontar stock
-            product.setStock(product.getStock() - item.getCantidad());
-            productRepository.save(product);
+        request.items().forEach(itemReq -> {
+            Product product = productService.findEntityById(itemReq.productId());
 
-            // Precio fijo al momento de la venta
-            item.setPrecioUnitario(product.getPrecio());
-            item.calcularSubTotal();
-            item.setOrder(order);
-        }
+            product.decreaseStock(itemReq.cantidad());
 
-        // Recalcular total
-        order.recalculatetotal();
+            OrderItem item = new OrderItem(product, itemReq.cantidad());
+            order.addItem(item);
+        });
 
-        // Actualizar cliente
-        Client client = order.getCliente();
-        client.setTotalCompras(
-                client.getTotalCompras().add(order.getTotal())
-        );
-        client.setUltimaCompra(order.getFecha());
-        clientRepository.save(client);
+        Order savedOrder = ordenRepository.save(order);
 
-        return orderRepository.save(order);
+        client.registerPurchase(savedOrder.getTotal());
+
+        return orderMapper.toResponse(savedOrder);
+    }
+
+    // =========================
+    // ADMIN / OWNER
+    // =========================
+    @Override
+    public List<OrderResponse> findAll() {
+        return ordenRepository.findAll()
+                .stream()
+                .map(orderMapper::toResponse)
+                .toList();
     }
 
     @Override
-    @Transactional
-    public Order cambiarEstadoOrden(UUID orderId, OrdenStatus nuevoEstado) {
+    public OrderResponse findById(UUID id) {
+        Order order = ordenRepository.findById(id)
+                .orElseThrow(() -> new BusinessExeption("Orden no encontrada"));
+        return orderMapper.toResponse(order);
+    }
 
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new BusinessExeption("Venta no encontrada"));
+    @Override
+    public OrderResponse cambiarEstadoOrden(UUID id, OrdenStatus nuevoEstado) {
+
+        Order order = ordenRepository.findById(id)
+                .orElseThrow(() -> new BusinessExeption("Orden no encontrada"));
 
         order.setEstado(nuevoEstado);
 
-        return orderRepository.save(order);
+        return orderMapper.toResponse(order);
     }
 
+    // =========================
+    // VENDEDOR (SEGURIDAD REAL)
+    // =========================
+    @Override
+    public List<OrderResponse> findMyOrders(String username) {
 
+        User vendedor = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessExeption("Usuario no encontrado"));
+
+        return ordenRepository.findByVendedor(vendedor)
+                .stream()
+                .map(orderMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public OrderResponse findMyOrderById(UUID id, String username) {
+
+        Order order = ordenRepository
+                .findByIdAndVendedorUsername(id, username)
+                .orElseThrow(() -> new BusinessExeption("Orden no encontrada"));
+
+        return orderMapper.toResponse(order);
+    }
 }

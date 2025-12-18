@@ -44,4 +44,12 @@ public class OrderItem {
             this.subTotal = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
         }
     }
+
+
+    public OrderItem(Product product, Integer cantidad) {
+        this.product = product;
+        this.cantidad = cantidad;
+        this.precioUnitario = product.getPrecio();
+        this.subTotal = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+    }
 }

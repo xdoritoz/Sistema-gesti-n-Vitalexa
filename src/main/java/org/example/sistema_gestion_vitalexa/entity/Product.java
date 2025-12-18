@@ -36,5 +36,32 @@ public class Product {
 
     private boolean active = true;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    //reducir stock metodo
+    public void decreaseStock(int cantidad) {
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException("Cantidad inválida");
+        }
+        if (this.stock < cantidad) {
+            throw new RuntimeException("Stock insuficiente para " + nombre);
+        }
+        this.stock -= cantidad;
+    }
+
 }

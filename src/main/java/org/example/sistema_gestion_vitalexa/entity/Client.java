@@ -26,5 +26,16 @@ public class Client {
 
     private BigDecimal totalCompras = BigDecimal.ZERO;
 
+    private String email;
+
     private LocalDateTime ultimaCompra;
+
+    // registrar una compra y actualizar totalCompras y ultimaCompra
+    public void registerPurchase(BigDecimal monto) {
+        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        this.totalCompras = this.totalCompras.add(monto);
+        this.ultimaCompra = LocalDateTime.now();
+    }
 }
