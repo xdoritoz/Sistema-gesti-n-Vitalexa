@@ -64,4 +64,18 @@ public class Product {
         this.stock -= cantidad;
     }
 
+    //aumentar stock metodo
+    // aumentar stock metodo
+    public void increaseStock(int cantidad) {
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException("Cantidad inválida");
+        }
+        if (this.stock == null) {
+            this.stock = 0;
+        }
+        this.stock += cantidad;
+    }
+
+
+
 }

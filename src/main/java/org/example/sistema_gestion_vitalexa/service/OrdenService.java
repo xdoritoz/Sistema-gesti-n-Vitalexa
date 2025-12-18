@@ -22,4 +22,7 @@ public interface OrdenService {
     // 🔹 VENDEDOR (solo sus órdenes)
     List<OrderResponse> findMyOrders(String username);
     OrderResponse findMyOrderById(UUID id, String username);
+
+    OrderResponse updateOrder(UUID orderId, OrderRequestDto request);
+
 }

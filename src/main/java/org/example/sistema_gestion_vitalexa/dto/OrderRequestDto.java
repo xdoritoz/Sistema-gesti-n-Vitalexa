@@ -11,5 +11,7 @@ public record OrderRequestDto(
         UUID clientId,
 
         @NotEmpty
-        List<OrderItemRequestDTO> items
+        List<OrderItemRequestDTO> items,
+
+        String notas
 ) { }

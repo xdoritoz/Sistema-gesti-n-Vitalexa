@@ -15,6 +15,7 @@ import org.example.sistema_gestion_vitalexa.service.OrdenService;
 import org.example.sistema_gestion_vitalexa.service.ProductService;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,7 +35,6 @@ public class OrderServiceImpl implements OrdenService {
     // =========================
     @Override
     public OrderResponse createOrder(OrderRequestDto request, String username) {
-
         if (request.items() == null || request.items().isEmpty()) {
             throw new BusinessExeption("La venta debe tener al menos un producto");
         }
@@ -42,14 +42,31 @@ public class OrderServiceImpl implements OrdenService {
         User vendedor = userRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessExeption("Vendedor no encontrado"));
 
-        Client client = clientService.findEntityById(request.clientId());
+        Client client = null;
+        if (request.clientId() != null) {
+            client = clientService.findEntityById(request.clientId());
+        }
 
         Order order = new Order(vendedor, client);
+
+        // Agregar notas si existen
+        if (request.notas() != null && !request.notas().isBlank()) {
+            order.setNotas(request.notas());
+        }
 
         request.items().forEach(itemReq -> {
             Product product = productService.findEntityById(itemReq.productId());
 
-            product.decreaseStock(itemReq.cantidad());
+            // Permitir productos sin stock si hay una nota
+            if (product.getStock() < itemReq.cantidad() &&
+                    (request.notas() == null || request.notas().isBlank())) {
+                throw new BusinessExeption("Stock insuficiente para: " + product.getNombre());
+            }
+
+            // Solo decrementar stock si hay suficiente
+            if (product.getStock() >= itemReq.cantidad()) {
+                product.decreaseStock(itemReq.cantidad());
+            }
 
             OrderItem item = new OrderItem(product, itemReq.cantidad());
             order.addItem(item);
@@ -57,10 +74,13 @@ public class OrderServiceImpl implements OrdenService {
 
         Order savedOrder = ordenRepository.save(order);
 
-        client.registerPurchase(savedOrder.getTotal());
+        if (client != null) {
+            client.registerPurchase(savedOrder.getTotal());
+        }
 
         return orderMapper.toResponse(savedOrder);
     }
+
 
     // =========================
     // ADMIN / OWNER
@@ -115,4 +135,52 @@ public class OrderServiceImpl implements OrdenService {
 
         return orderMapper.toResponse(order);
     }
+
+    @Override
+    public OrderResponse updateOrder(UUID orderId, OrderRequestDto request) {
+        Order order = ordenRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessExeption("Orden no encontrada"));
+
+        if (order.getEstado() == OrdenStatus.COMPLETADO ||
+                order.getEstado() == OrdenStatus.CANCELADO) {
+            throw new BusinessExeption("No se puede editar una orden completada o cancelada");
+        }
+
+        // Restaurar stock de items anteriores
+        order.getItems().forEach(item -> {
+            Product product = item.getProduct();
+            product.increaseStock(item.getCantidad());
+        });
+
+        // Limpiar items actuales
+        order.getItems().clear();
+        order.setTotal(BigDecimal.ZERO);
+
+        // Agregar nuevos items
+        request.items().forEach(itemReq -> {
+            Product product = productService.findEntityById(itemReq.productId());
+
+            if (product.getStock() >= itemReq.cantidad()) {
+                product.decreaseStock(itemReq.cantidad());
+            }
+
+            OrderItem item = new OrderItem(product, itemReq.cantidad());
+            order.addItem(item);
+        });
+
+        // Actualizar notas
+        if (request.notas() != null) {
+            order.setNotas(request.notas());
+        }
+
+        // Actualizar cliente si cambió
+        if (request.clientId() != null) {
+            Client newClient = clientService.findEntityById(request.clientId());
+            order.setCliente(newClient);
+        }
+
+        Order updatedOrder = ordenRepository.save(order);
+        return orderMapper.toResponse(updatedOrder);
+    }
+
 }

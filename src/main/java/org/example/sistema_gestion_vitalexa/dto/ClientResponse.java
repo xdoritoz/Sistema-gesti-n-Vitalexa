@@ -7,7 +7,9 @@ import java.util.UUID;
 public record ClientResponse(
         UUID id,
         String nombre,
-        BigDecimal totalCompras,
-        LocalDateTime ultimaCompra
+        String email,
+        String telefono,
+        String direccion,
+        BigDecimal totalCompras
 ) {
 }

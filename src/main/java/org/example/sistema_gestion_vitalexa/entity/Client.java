@@ -30,6 +30,11 @@ public class Client {
 
     private LocalDateTime ultimaCompra;
 
+    private String direccion;
+
+    private String telefono;
+
+
     // registrar una compra y actualizar totalCompras y ultimaCompra
     public void registerPurchase(BigDecimal monto) {
         if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {

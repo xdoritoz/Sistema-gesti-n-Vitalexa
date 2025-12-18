@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/api/vendedor/products")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('VENDEDOR')")
-public class ProductPublicController {
+public class ProductVendedorController  {
 
     private final ProductService productService;
 

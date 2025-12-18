@@ -36,6 +36,10 @@ public class Order {
     @Column(nullable = false)
     private OrdenStatus estado;
 
+    //  notas de productos faltantes
+    @Column(columnDefinition = "TEXT")
+    private String notas;
+
     // Vendedor que realizó la venta
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vendedor_id", nullable = false)
@@ -79,10 +83,19 @@ public class Order {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    // 🔥 CONSTRUCTOR REAL
-    public Order(User vendedor, Client cliente) {
+    // CONSTRUCTOR REAL
+    public Order(User vendedor, Client client) {
         this.vendedor = vendedor;
-        this.cliente = cliente;
+        this.cliente = client;
+        this.estado = OrdenStatus.PENDIENTE;
+        this.fecha = LocalDateTime.now();
+        this.total = BigDecimal.ZERO;
+    }
+
+    // Método para limpiar items
+    public void clearItems() {
+        items.clear();
+        this.total = BigDecimal.ZERO;
     }
 
 

@@ -12,6 +12,7 @@ public record OrderResponse(
         BigDecimal total,
         String estado,
         LocalDateTime fecha,
-        List<OrderItemResponse> items
+        List<OrderItemResponse> items,
+        String notas
 ) {
 }

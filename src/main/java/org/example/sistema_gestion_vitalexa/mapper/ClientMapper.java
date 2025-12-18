@@ -1,6 +1,7 @@
 package org.example.sistema_gestion_vitalexa.mapper;
 
 import org.example.sistema_gestion_vitalexa.dto.ClientResponse;
+import org.example.sistema_gestion_vitalexa.dto.CreateClientRequest;
 import org.example.sistema_gestion_vitalexa.entity.Client;
 import org.mapstruct.Mapper;
 
@@ -11,4 +12,7 @@ public interface ClientMapper {
     ClientResponse toResponse(Client client);
 
     List<ClientResponse> toResponseList(List<Client> clients);
+
+
+    Client toEntity(CreateClientRequest createClientRequest);
 }

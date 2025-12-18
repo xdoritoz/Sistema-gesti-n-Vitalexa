@@ -1,9 +1,11 @@
 package org.example.sistema_gestion_vitalexa.controller.admin;
 
 import lombok.RequiredArgsConstructor;
+import org.example.sistema_gestion_vitalexa.dto.OrderRequestDto;
 import org.example.sistema_gestion_vitalexa.dto.OrderResponse;
 import org.example.sistema_gestion_vitalexa.enums.OrdenStatus;
 import org.example.sistema_gestion_vitalexa.service.OrdenService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,4 +37,14 @@ public class OrderAdminController {
     ) {
         return ordenService.cambiarEstadoOrden(id, status);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<OrderResponse> updateOrder(
+            @PathVariable UUID id,
+            @RequestBody OrderRequestDto request
+    ) {
+        OrderResponse response = ordenService.updateOrder(id, request);
+        return ResponseEntity.ok(response);
+    }
+
 }

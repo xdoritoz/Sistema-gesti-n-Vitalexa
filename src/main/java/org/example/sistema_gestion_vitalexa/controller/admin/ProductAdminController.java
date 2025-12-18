@@ -31,6 +31,7 @@ public class ProductAdminController {
     private final ProductService productService;
     private final ProductImageService imageService;
 
+
     /**
      * Crear nuevo producto con imagen
      */
@@ -196,4 +197,8 @@ public class ProductAdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error cambiando estado");
         }
     }
+
+
+
+
 }

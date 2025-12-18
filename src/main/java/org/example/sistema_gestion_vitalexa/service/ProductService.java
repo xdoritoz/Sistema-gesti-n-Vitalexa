@@ -19,4 +19,5 @@ public interface ProductService {
     ProductResponse findById(UUID id);
     void changeStatus(UUID id, boolean status);
 
+
 }
