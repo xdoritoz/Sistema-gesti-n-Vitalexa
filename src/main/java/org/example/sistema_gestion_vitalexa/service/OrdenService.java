@@ -24,5 +24,6 @@ public interface OrdenService {
     OrderResponse findMyOrderById(UUID id, String username);
 
     OrderResponse updateOrder(UUID orderId, OrderRequestDto request);
+    List<OrderResponse> findByEstado(OrdenStatus estado);
 
 }

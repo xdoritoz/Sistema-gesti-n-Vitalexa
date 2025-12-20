@@ -7,6 +7,7 @@ import org.example.sistema_gestion_vitalexa.entity.Product;
 import org.example.sistema_gestion_vitalexa.exceptions.BusinessExeption;
 import org.example.sistema_gestion_vitalexa.mapper.ProductMapper;
 import org.example.sistema_gestion_vitalexa.repository.ProductRepository;
+import org.example.sistema_gestion_vitalexa.service.NotificationService;
 import org.example.sistema_gestion_vitalexa.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository repository;
     private final ProductMapper mapper;
+    private final NotificationService notificationService;
 
     @Override
     public ProductResponse create(CreateProductRequest request) {
@@ -61,7 +63,12 @@ public class ProductServiceImpl implements ProductService {
             product.setActive(request.active());
         }
 
-        return mapper.toResponse(repository.save(product));
+        Product updated = repository.save(product);
+
+        // ✅ VERIFICAR NIVELES DE STOCK
+        checkStockLevels(updated);
+
+        return mapper.toResponse(updated);
     }
 
     @Override
@@ -124,4 +131,34 @@ public class ProductServiceImpl implements ProductService {
                 .map(mapper::toResponse)
                 .toList();
     }
+
+    @Override
+    public List<ProductResponse> findLowStock(int threshold) {
+        return repository.findByStockLessThanAndActiveTrue(threshold)
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
+    // Método auxiliar para verificar stock
+    private void checkStockLevels(Product product) {
+        // Verificar si tiene punto de reorden configurado
+        if (product.getReorderPoint() != null && product.getReorderPoint() > 0) {
+            if (product.getStock() == 0) {
+                notificationService.sendOutOfStockAlert(
+                        product.getId().toString(),
+                        product.getNombre()
+                );
+            } else if (product.getStock() <= product.getReorderPoint()) {
+                notificationService.sendLowStockAlert(
+                        product.getId().toString(),
+                        product.getNombre(),
+                        product.getStock(),
+                        product.getReorderPoint()
+                );
+            }
+        }
+    }
+
+
+
 }

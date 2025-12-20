@@ -18,6 +18,8 @@ public interface ProductService {
     Product findEntityById(UUID id);
     ProductResponse findById(UUID id);
     void changeStatus(UUID id, boolean status);
+    List<ProductResponse> findLowStock(int threshold);
+
 
 
 }

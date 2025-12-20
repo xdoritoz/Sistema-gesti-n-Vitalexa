@@ -34,11 +34,14 @@ public class Client {
 
     private String telefono;
 
+    private boolean active = true;
 
-    // registrar una compra y actualizar totalCompras y ultimaCompra
+
+    // ✅ ARREGLAR ESTE MÉTODO
     public void registerPurchase(BigDecimal monto) {
-        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
-            return;
+        // Verificar que totalCompras no sea null antes de sumar
+        if (this.totalCompras == null) {
+            this.totalCompras = BigDecimal.ZERO;
         }
         this.totalCompras = this.totalCompras.add(monto);
         this.ultimaCompra = LocalDateTime.now();

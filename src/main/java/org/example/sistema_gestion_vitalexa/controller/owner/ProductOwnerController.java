@@ -31,23 +31,42 @@ public class ProductOwnerController {
     private final ProductService productService;
     private final ProductImageService imageService;
 
-    /**
-     * Obtener todos los productos
-     */
+    // ========== READ OPERATIONS ==========
+
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> findAll() {
-        return ResponseEntity.ok(productService.findAllAdmin());
+    public ResponseEntity<List<ProductResponse>> getAllProducts() {
+        List<ProductResponse> products = productService.findAllAdmin();
+        return ResponseEntity.ok(products);
     }
 
-    /**
-     * Crear nuevo producto con imagen
-     */
+    @GetMapping("/active")
+    public ResponseEntity<List<ProductResponse>> getActiveProducts() {
+        List<ProductResponse> products = productService.findAllActive();
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/low-stock")
+    public ResponseEntity<List<ProductResponse>> getLowStockProducts(
+            @RequestParam(defaultValue = "10") int threshold) {
+        List<ProductResponse> products = productService.findLowStock(threshold);
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable UUID id) {
+        ProductResponse product = productService.findById(id);
+        return ResponseEntity.ok(product);
+    }
+
+    // ========== WRITE OPERATIONS ==========
+
     @PostMapping
     public ResponseEntity<ProductResponse> create(
             @RequestParam String nombre,
             @RequestParam String descripcion,
             @RequestParam BigDecimal precio,
             @RequestParam Integer stock,
+            @RequestParam(required = false, defaultValue = "10") Integer reorderPoint,  // ← AGREGAR
             @RequestParam(required = false) MultipartFile image) {
         try {
             String imageUrl = null;
@@ -55,67 +74,123 @@ public class ProductOwnerController {
                 imageUrl = imageService.saveImage(image);
             }
 
-            CreateProductRequest request = new CreateProductRequest(nombre, descripcion, precio, stock, imageUrl);
+            // ← ORDEN CORRECTO
+            CreateProductRequest request = new CreateProductRequest(
+                    nombre,
+                    descripcion,
+                    precio,
+                    stock,
+                    reorderPoint,
+                    imageUrl
+            );
+
             ProductResponse response = productService.create(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IOException e) {
+            log.error("Error guardando imagen al crear producto", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    /**
-     * Actualizar producto existente
-     */
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResponse> update(
+    public ResponseEntity<?> update(
             @PathVariable UUID id,
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) String descripcion,
-            @RequestParam(required = false) BigDecimal precio,
-            @RequestParam(required = false) Integer stock,
+            @RequestParam(required = false) String precio,
+            @RequestParam(required = false) String stock,
+            @RequestParam(required = false) String reorderPoint,  // ← AGREGAR
             @RequestParam(required = false) MultipartFile image,
             @RequestParam(required = false) Boolean active) {
         try {
-            log.debug("Actualizando producto ID: {} con nombre: {}", id, nombre);
+            log.debug("Update request id={} nombre={}", id, nombre);
+
+            BigDecimal precioVal = null;
+            Integer stockVal = null;
+            Integer reorderPointVal = null;
+
+            if (precio != null && !precio.isBlank()) {
+                try {
+                    String normalized = precio.replace(',', '.').trim();
+                    precioVal = new BigDecimal(normalized);
+                } catch (NumberFormatException nfe) {
+                    log.warn("Precio inválido recibido: {}", precio);
+                    return ResponseEntity.badRequest().body("Precio inválido");
+                }
+            }
+
+            if (stock != null && !stock.isBlank()) {
+                try {
+                    stockVal = Integer.valueOf(stock);
+                } catch (NumberFormatException nfe) {
+                    log.warn("Stock inválido recibido: {}", stock);
+                    return ResponseEntity.badRequest().body("Stock inválido");
+                }
+            }
+
+            // ← AGREGAR VALIDACIÓN
+            if (reorderPoint != null && !reorderPoint.isBlank()) {
+                try {
+                    reorderPointVal = Integer.valueOf(reorderPoint);
+                } catch (NumberFormatException nfe) {
+                    log.warn("Reorder point inválido recibido: {}", reorderPoint);
+                    return ResponseEntity.badRequest().body("Punto de reorden inválido");
+                }
+            }
 
             String imageUrl = null;
             if (image != null && !image.isEmpty()) {
                 imageUrl = imageService.saveImage(image);
             }
 
-            UpdateProductRequest request = new UpdateProductRequest(nombre, descripcion, precio, stock, imageUrl, active);
+            // ← ORDEN CORRECTO
+            UpdateProductRequest request = new UpdateProductRequest(
+                    nombre,
+                    descripcion,
+                    precioVal,
+                    stockVal,
+                    reorderPointVal,
+                    imageUrl,
+                    active
+            );
+
             ProductResponse response = productService.update(id, request);
-            log.info("Producto actualizado exitosamente: {}", id);
             return ResponseEntity.ok(response);
-        } catch (BusinessExeption e) {
-            log.warn("Error de negocio al actualizar producto: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (IOException e) {
-            log.error("Error al procesar imagen", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (BusinessExeption be) {
+            log.warn("Business error updating product {}: {}", id, be.getMessage());
+            return ResponseEntity.badRequest().body(be.getMessage());
+        } catch (IOException ioe) {
+            log.error("IO error when saving image for product {}", id, ioe);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error guardando imagen");
         } catch (Exception e) {
-            log.error("Error inesperado al actualizar producto", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("Unexpected error updating product {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error actualizando producto");
         }
     }
 
-    /**
-     * Cambiar estado de un producto (activo/inactivo)
-     */
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<Void> changeStatus(
+    public ResponseEntity<?> changeStatus(
             @PathVariable UUID id,
             @RequestParam boolean activo) {
-        productService.changeStatus(id, activo);
-        return ResponseEntity.noContent().build();
+        try {
+            log.debug("Change status request id={} activo={}", id, activo);
+            productService.changeStatus(id, activo);
+            return ResponseEntity.noContent().build();
+        } catch (BusinessExeption be) {
+            log.warn("Business error changing status for {}: {}", id, be.getMessage());
+            return ResponseEntity.badRequest().body(be.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error changing status for {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error cambiando estado");
+        }
     }
 
-    /**
-     * Eliminar (soft delete) o hard delete si se pasa ?hard=true
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable UUID id, @RequestParam(name = "hard", required = false, defaultValue = "false") boolean hard) {
+    public ResponseEntity<?> delete(
+            @PathVariable UUID id,
+            @RequestParam(name = "hard", required = false, defaultValue = "false") boolean hard) {
         try {
+            log.debug("Delete request for id={} hard={}", id, hard);
             if (hard) {
                 productService.hardDelete(id);
             } else {
@@ -129,14 +204,5 @@ public class ProductOwnerController {
             log.error("Unexpected error deleting product {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error eliminando producto");
         }
-    }
-
-    /**
-     * Obtener producto por ID
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> findById(@PathVariable UUID id) {
-        ProductResponse producto = productService.findById(id);
-        return ResponseEntity.ok(producto);
     }
 }

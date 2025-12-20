@@ -11,6 +11,7 @@ import org.example.sistema_gestion_vitalexa.mapper.OrderMapper;
 import org.example.sistema_gestion_vitalexa.repository.OrdenRepository;
 import org.example.sistema_gestion_vitalexa.repository.UserRepository;
 import org.example.sistema_gestion_vitalexa.service.ClientService;
+import org.example.sistema_gestion_vitalexa.service.NotificationService;
 import org.example.sistema_gestion_vitalexa.service.OrdenService;
 import org.example.sistema_gestion_vitalexa.service.ProductService;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class OrderServiceImpl implements OrdenService {
     private final ClientService clientService;
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
+    private final NotificationService notificationService;
 
     // =========================
     // CREATE ORDER (VENDEDOR)
@@ -73,6 +75,13 @@ public class OrderServiceImpl implements OrdenService {
         });
 
         Order savedOrder = ordenRepository.save(order);
+
+        // ✅ ENVIAR NOTIFICACIÓN DE NUEVA ORDEN
+        notificationService.sendNewOrderNotification(
+                savedOrder.getId().toString(),
+                vendedor.getUsername(),
+                client != null ? client.getNombre() : "Sin cliente"
+        );
 
         if (client != null) {
             client.registerPurchase(savedOrder.getTotal());
@@ -137,6 +146,7 @@ public class OrderServiceImpl implements OrdenService {
     }
 
     @Override
+    @Transactional
     public OrderResponse updateOrder(UUID orderId, OrderRequestDto request) {
         Order order = ordenRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessExeption("Orden no encontrada"));
@@ -152,35 +162,47 @@ public class OrderServiceImpl implements OrdenService {
             product.increaseStock(item.getCantidad());
         });
 
-        // Limpiar items actuales
-        order.getItems().clear();
-        order.setTotal(BigDecimal.ZERO);
+        // Limpiar items actuales (esto pone total en 0)
+        order.clearItems();
 
-        // Agregar nuevos items
+        // Agregar nuevos items (esto recalcula el total)
         request.items().forEach(itemReq -> {
             Product product = productService.findEntityById(itemReq.productId());
 
             if (product.getStock() >= itemReq.cantidad()) {
                 product.decreaseStock(itemReq.cantidad());
+            } else if (request.notas() == null || request.notas().isBlank()) {
+                throw new BusinessExeption("Stock insuficiente para: " + product.getNombre());
             }
 
             OrderItem item = new OrderItem(product, itemReq.cantidad());
-            order.addItem(item);
+            order.addItem(item);  // ← Esto llama a recalculateTotal()
         });
 
         // Actualizar notas
-        if (request.notas() != null) {
-            order.setNotas(request.notas());
-        }
+        order.setNotas(request.notas());
 
-        // Actualizar cliente si cambió
+        // Actualizar cliente
         if (request.clientId() != null) {
             Client newClient = clientService.findEntityById(request.clientId());
             order.setCliente(newClient);
+        } else {
+            order.setCliente(null);
         }
 
+        // Guardar orden actualizada
         Order updatedOrder = ordenRepository.save(order);
         return orderMapper.toResponse(updatedOrder);
     }
+
+    @Override
+    public List<OrderResponse> findByEstado(OrdenStatus estado) {
+        return ordenRepository.findByEstado(estado)
+                .stream()
+                .map(orderMapper::toResponse)
+                .toList();
+    }
+
+
 
 }

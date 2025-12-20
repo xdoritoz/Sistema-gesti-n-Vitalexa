@@ -1,10 +1,7 @@
 package org.example.sistema_gestion_vitalexa.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,6 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
 
 public class Product {
 
@@ -75,6 +73,9 @@ public class Product {
         }
         this.stock += cantidad;
     }
+
+    @Column(name = "reorder_point")
+    private Integer reorderPoint;
 
 
 

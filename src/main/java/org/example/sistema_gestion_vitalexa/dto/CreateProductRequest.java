@@ -8,6 +8,7 @@ public record CreateProductRequest(
         String descripcion,
         BigDecimal precio,
         Integer stock,
-        String imageUrl
+        Integer reorderPoint,  // ← Posición 5
+        String imageUrl        // ← Posición 6
 ) {
 }

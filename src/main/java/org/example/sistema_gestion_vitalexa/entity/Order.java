@@ -23,34 +23,27 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    // Fecha de la venta
     @Column(nullable = false)
     private LocalDateTime fecha;
 
-    // Total de la venta
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal total;
 
-    // Estado del pedido
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrdenStatus estado;
 
-    //  notas de productos faltantes
     @Column(columnDefinition = "TEXT")
     private String notas;
 
-    // Vendedor que realizó la venta
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vendedor_id", nullable = false)
     private User vendedor;
 
-    // Cliente al que se le vendió
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client_id", nullable = false)
+    @JoinColumn(name = "client_id")  // ← QUITAR nullable = false para permitir sin cliente
     private Client cliente;
 
-    // Detalle de productos vendidos
     @OneToMany(
             mappedBy = "order",
             cascade = CascadeType.ALL,
@@ -58,47 +51,49 @@ public class Order {
     )
     private List<OrderItem> items = new ArrayList<>();
 
-    @PrePersist
-    public void prePersist() {
-        this.fecha = LocalDateTime.now();
-        this.estado = OrdenStatus.CONFIRMADO;
-        this.total = BigDecimal.ZERO;
-    }
+    // ❌ ELIMINAR ESTE MÉTODO - Es el que causa el problema
+    // @PrePersist
+    // public void prePersist() {
+    //     this.fecha = LocalDateTime.now();
+    //     this.estado = OrdenStatus.CONFIRMADO;
+    //     this.total = BigDecimal.ZERO;
+    // }
 
-    public void addItem(OrderItem item) {
-        items.add(item);
-        item.setOrder(this);
-        recalculatetotal();
-    }
-
-    public void removeItem(OrderItem item) {
-        items.remove(item);
-        item.setOrder(null);
-        recalculatetotal();
-    }
-
-    public void recalculatetotal() {
-        this.total = items.stream()
-            .map(OrderItem::getSubTotal)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    // CONSTRUCTOR REAL
-    public Order(User vendedor, Client client) {
+    // ✅ CONSTRUCTOR CORRECTO
+    public Order(User vendedor, Client cliente) {
         this.vendedor = vendedor;
-        this.cliente = client;
+        this.cliente = cliente;
         this.estado = OrdenStatus.PENDIENTE;
         this.fecha = LocalDateTime.now();
         this.total = BigDecimal.ZERO;
+        this.items = new ArrayList<>();
     }
 
-    // Método para limpiar items
+    // ✅ Agregar item y recalcular
+    public void addItem(OrderItem item) {
+        items.add(item);
+        item.setOrder(this);
+        recalculateTotal();  // ← Corregido el typo
+    }
+
+    // ✅ Remover item y recalcular
+    public void removeItem(OrderItem item) {
+        items.remove(item);
+        item.setOrder(null);
+        recalculateTotal();
+    }
+
+    // ✅ Recalcular total
+    public void recalculateTotal() {
+        this.total = items.stream()
+                .map(OrderItem::getSubTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    // ✅ Limpiar items (para edición)
     public void clearItems() {
+        items.forEach(item -> item.setOrder(null));
         items.clear();
         this.total = BigDecimal.ZERO;
     }
-
-
-
-
 }

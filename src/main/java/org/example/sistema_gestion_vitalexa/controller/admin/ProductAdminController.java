@@ -31,7 +31,6 @@ public class ProductAdminController {
     private final ProductService productService;
     private final ProductImageService imageService;
 
-
     /**
      * Crear nuevo producto con imagen
      */
@@ -41,6 +40,7 @@ public class ProductAdminController {
             @RequestParam String descripcion,
             @RequestParam BigDecimal precio,
             @RequestParam Integer stock,
+            @RequestParam(required = false, defaultValue = "10") Integer reorderPoint,  // ← CORREGIDO
             @RequestParam(required = false) MultipartFile image) {
         try {
             String imageUrl = null;
@@ -48,7 +48,16 @@ public class ProductAdminController {
                 imageUrl = imageService.saveImage(image);
             }
 
-            CreateProductRequest request = new CreateProductRequest(nombre, descripcion, precio, stock, imageUrl);
+
+            CreateProductRequest request = new CreateProductRequest(
+                    nombre,
+                    descripcion,
+                    precio,
+                    stock,
+                    reorderPoint,
+                    imageUrl
+            );
+
             ProductResponse response = productService.create(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IOException e) {
@@ -58,7 +67,7 @@ public class ProductAdminController {
     }
 
     /**
-     * Actualizar producto existente (parsing manual para evitar errores 400 en multipart)
+     * Actualizar producto existente
      */
     @PutMapping("/{id}")
     public ResponseEntity<?> update(
@@ -67,6 +76,7 @@ public class ProductAdminController {
             @RequestParam(required = false) String descripcion,
             @RequestParam(required = false) String precio,
             @RequestParam(required = false) String stock,
+            @RequestParam(required = false) String reorderPoint,  // ← AGREGAR AQUÍ
             @RequestParam(required = false) MultipartFile image,
             @RequestParam(required = false) Boolean active) {
         try {
@@ -74,6 +84,7 @@ public class ProductAdminController {
 
             BigDecimal precioVal = null;
             Integer stockVal = null;
+            Integer reorderPointVal = null;
 
             if (precio != null && !precio.isBlank()) {
                 try {
@@ -94,12 +105,32 @@ public class ProductAdminController {
                 }
             }
 
+            // ← AGREGAR VALIDACIÓN DE REORDER POINT
+            if (reorderPoint != null && !reorderPoint.isBlank()) {
+                try {
+                    reorderPointVal = Integer.valueOf(reorderPoint);
+                } catch (NumberFormatException nfe) {
+                    log.warn("Reorder point inválido recibido: {}", reorderPoint);
+                    return ResponseEntity.badRequest().body("Punto de reorden inválido");
+                }
+            }
+
             String imageUrl = null;
             if (image != null && !image.isEmpty()) {
                 imageUrl = imageService.saveImage(image);
             }
 
-            UpdateProductRequest request = new UpdateProductRequest(nombre, descripcion, precioVal, stockVal, imageUrl, active);
+            // ← ORDEN CORRECTO: nombre, descripcion, precio, stock, reorderPoint, imageUrl, active
+            UpdateProductRequest request = new UpdateProductRequest(
+                    nombre,
+                    descripcion,
+                    precioVal,
+                    stockVal,
+                    reorderPointVal,  // ← Posición 5
+                    imageUrl,         // ← Posición 6
+                    active            // ← Posición 7
+            );
+
             ProductResponse response = productService.update(id, request);
             return ResponseEntity.ok(response);
         } catch (BusinessExeption be) {
@@ -115,7 +146,7 @@ public class ProductAdminController {
     }
 
     /**
-     * Endpoint alternativo para actualizar (POST multipart) - útil para clientes que no envían bien PUT multipart
+     * Endpoint alternativo para actualizar (POST multipart)
      */
     @PostMapping("/{id}/update")
     public ResponseEntity<?> updateViaPost(
@@ -124,16 +155,19 @@ public class ProductAdminController {
             @RequestParam(required = false) String descripcion,
             @RequestParam(required = false) String precio,
             @RequestParam(required = false) String stock,
+            @RequestParam(required = false) String reorderPoint,  // ← AGREGAR AQUÍ
             @RequestParam(required = false) MultipartFile image,
             @RequestParam(required = false) Boolean active) {
-        return update(id, nombre, descripcion, precio, stock, image, active);
+        return update(id, nombre, descripcion, precio, stock, reorderPoint, image, active);
     }
 
     /**
      * Eliminar (soft delete) o hard delete si se pasa ?hard=true
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable UUID id, @RequestParam(name = "hard", required = false, defaultValue = "false") boolean hard) {
+    public ResponseEntity<?> delete(
+            @PathVariable UUID id,
+            @RequestParam(name = "hard", required = false, defaultValue = "false") boolean hard) {
         try {
             log.debug("Delete request for id={} hard={}", id, hard);
             if (hard) {
@@ -197,8 +231,4 @@ public class ProductAdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error cambiando estado");
         }
     }
-
-
-
-
 }
