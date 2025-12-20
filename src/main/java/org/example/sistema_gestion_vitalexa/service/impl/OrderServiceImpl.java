@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import static org.example.sistema_gestion_vitalexa.service.impl.ProductServiceImpl.log;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -111,13 +113,20 @@ public class OrderServiceImpl implements OrdenService {
 
     @Override
     public OrderResponse cambiarEstadoOrden(UUID id, OrdenStatus nuevoEstado) {
-
         Order order = ordenRepository.findById(id)
                 .orElseThrow(() -> new BusinessExeption("Orden no encontrada"));
 
+        OrdenStatus oldStatus = order.getEstado();
         order.setEstado(nuevoEstado);
+        Order updated = ordenRepository.save(order);
 
-        return orderMapper.toResponse(order);
+        // ✅ ENVIAR NOTIFICACIÓN SI SE COMPLETA
+        if (nuevoEstado == OrdenStatus.COMPLETADO && oldStatus != OrdenStatus.COMPLETADO) {
+            notificationService.sendOrderCompletedNotification(id.toString());
+            log.info("Orden {} completada, notificación enviada", id);
+        }
+
+        return orderMapper.toResponse(updated);
     }
 
     // =========================

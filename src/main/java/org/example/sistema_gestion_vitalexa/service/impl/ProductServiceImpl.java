@@ -20,7 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
-    private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
+    static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     private final ProductRepository repository;
     private final ProductMapper mapper;

@@ -22,7 +22,7 @@ public class NotificationServiceImpl implements NotificationService {
         String title = "Nueva Orden Recibida";
         String message = String.format("Nueva orden #%s creada por %s para cliente %s",
                 orderId.substring(0, 8), vendorName, clientName);
-        String targetUrl = "/admin/orders/" + orderId;
+        String targetUrl = "/admin"; // ← CAMBIAR PARA QUE VAYA AL DASHBOARD
 
         NotificationData data = new NotificationData(orderId, null, null, null, null);
         NotificationDTO notification = createNotification(
@@ -33,9 +33,8 @@ public class NotificationServiceImpl implements NotificationService {
                 data
         );
 
-        // Enviar a admins y owners
-        messagingTemplate.convertAndSend("/topic/admin/notifications", notification);
-        messagingTemplate.convertAndSend("/topic/owner/notifications", notification);
+        // ✅ ENVIAR SOLO A UN TOPIC PARA ADMIN Y OWNER
+        messagingTemplate.convertAndSend("/topic/admin-owner/notifications", notification);
 
         log.info("Notificación enviada: Nueva orden {}", orderId);
     }
@@ -44,7 +43,7 @@ public class NotificationServiceImpl implements NotificationService {
     public void sendOrderCompletedNotification(String orderId) {
         String title = "Orden Completada";
         String message = String.format("La orden #%s ha sido completada exitosamente", orderId.substring(0, 8));
-        String targetUrl = "/orders/" + orderId;
+        String targetUrl = "/admin"; // ← Dashboard general
 
         NotificationData data = new NotificationData(orderId, null, null, null, null);
         NotificationDTO notification = createNotification(
@@ -55,6 +54,7 @@ public class NotificationServiceImpl implements NotificationService {
                 data
         );
 
+        // ✅ ENVIAR A TODOS (incluyendo vendedores)
         messagingTemplate.convertAndSend("/topic/notifications", notification);
         log.info("Notificación enviada: Orden completada {}", orderId);
     }
@@ -64,7 +64,7 @@ public class NotificationServiceImpl implements NotificationService {
         String title = "⚠️ Stock Bajo";
         String message = String.format("El producto '%s' tiene solo %d unidades. Punto de reorden: %d",
                 productName, currentStock, reorderPoint);
-        String targetUrl = "/products/" + productId;
+        String targetUrl = "/admin"; // ← Dashboard general
 
         NotificationData data = new NotificationData(null, productId, productName, currentStock, reorderPoint);
         NotificationDTO notification = createNotification(
@@ -75,8 +75,8 @@ public class NotificationServiceImpl implements NotificationService {
                 data
         );
 
-        messagingTemplate.convertAndSend("/topic/admin/notifications", notification);
-        messagingTemplate.convertAndSend("/topic/owner/notifications", notification);
+        // ✅ SOLO PARA ADMIN Y OWNER
+        messagingTemplate.convertAndSend("/topic/admin-owner/notifications", notification);
 
         log.warn("Alerta de stock bajo: {} - Stock: {}/{}", productName, currentStock, reorderPoint);
     }
@@ -85,7 +85,7 @@ public class NotificationServiceImpl implements NotificationService {
     public void sendOutOfStockAlert(String productId, String productName) {
         String title = "🚨 Sin Stock";
         String message = String.format("El producto '%s' se ha quedado sin stock", productName);
-        String targetUrl = "/products/" + productId;
+        String targetUrl = "/admin"; // ← Dashboard general
 
         NotificationData data = new NotificationData(null, productId, productName, 0, null);
         NotificationDTO notification = createNotification(
@@ -96,8 +96,8 @@ public class NotificationServiceImpl implements NotificationService {
                 data
         );
 
-        messagingTemplate.convertAndSend("/topic/admin/notifications", notification);
-        messagingTemplate.convertAndSend("/topic/owner/notifications", notification);
+        // ✅ SOLO PARA ADMIN Y OWNER
+        messagingTemplate.convertAndSend("/topic/admin-owner/notifications", notification);
 
         log.error("Alerta: Producto sin stock - {}", productName);
     }
