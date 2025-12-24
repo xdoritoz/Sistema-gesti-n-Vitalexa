@@ -4,9 +4,8 @@ import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.canvas.draw.ILineDrawer;
+import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;  // ✅ CAMBIO AQUÍ
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
@@ -108,8 +107,11 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .setMarginBottom(20);
         document.add(slogan);
 
-        // Línea separadora
-        LineSeparator separator = new LineSeparator((ILineDrawer) new SolidBorder(BRAND_COLOR, 2));
+        // ✅ LÍNEA SEPARADORA CORREGIDA
+        SolidLine lineDrawer = new SolidLine();
+        lineDrawer.setColor(BRAND_COLOR);
+        lineDrawer.setLineWidth(2f);
+        LineSeparator separator = new LineSeparator(lineDrawer);
         document.add(separator);
         document.add(new Paragraph("\n"));
     }
@@ -252,7 +254,11 @@ public class InvoiceServiceImpl implements InvoiceService {
     private void addFooter(Document document) {
         document.add(new Paragraph("\n"));
 
-        LineSeparator separator = new LineSeparator((ILineDrawer) new SolidBorder(ColorConstants.LIGHT_GRAY, 1));
+        // ✅ LÍNEA SEPARADORA CORREGIDA
+        SolidLine lineDrawer = new SolidLine();
+        lineDrawer.setColor(ColorConstants.LIGHT_GRAY);
+        lineDrawer.setLineWidth(1f);
+        LineSeparator separator = new LineSeparator(lineDrawer);
         document.add(separator);
 
         Paragraph footer = new Paragraph("Gracias por su compra - VITALEXA")

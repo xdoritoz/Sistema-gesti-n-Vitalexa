@@ -17,11 +17,11 @@ public class UserDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (userRepository.count() > 0) return;
-
-        create("owner", "1234", Role.OWNER);
-        create("admin", "1234", Role.ADMIN);
-        create("vendedor", "1234", Role.VENDEDOR);
+        createOrUpdate("owner", "1234", Role.OWNER);
+        createOrUpdate("admin", "1234", Role.ADMIN);
+        createOrUpdate("vendedor", "1234", Role.VENDEDOR);
+        createOrUpdate("Marcelo", "1234", Role.VENDEDOR);
+        createOrUpdate("carlos", "1234", Role.VENDEDOR);
     }
 
     private void create(String username, String password, Role role) {
@@ -32,4 +32,17 @@ public class UserDataInitializer implements CommandLineRunner {
         u.setActive(true);
         userRepository.save(u);
     }
+
+    private void createOrUpdate(String username, String password, Role role) {
+        User u = userRepository.findByUsername(username)
+                .orElse(new User());
+
+        u.setUsername(username);
+        u.setPassword(encoder.encode(password));
+        u.setRole(role);
+        u.setActive(true);
+
+        userRepository.save(u);
+    }
+
 }

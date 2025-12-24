@@ -165,27 +165,36 @@ public class OrderServiceImpl implements OrdenService {
             throw new BusinessExeption("No se puede editar una orden completada o cancelada");
         }
 
-        // Restaurar stock de items anteriores
+        // ✅ VALIDAR QUE HAYA ITEMS
+        if (request.items() == null || request.items().isEmpty()) {
+            throw new BusinessExeption("La orden debe tener al menos un producto");
+        }
+
+        // ✅ RESTAURAR STOCK de items anteriores
         order.getItems().forEach(item -> {
             Product product = item.getProduct();
             product.increaseStock(item.getCantidad());
         });
 
-        // Limpiar items actuales (esto pone total en 0)
+        // Limpiar items actuales
         order.clearItems();
 
-        // Agregar nuevos items (esto recalcula el total)
+        // ✅ AGREGAR NUEVOS ITEMS (con validación de stock)
         request.items().forEach(itemReq -> {
             Product product = productService.findEntityById(itemReq.productId());
 
-            if (product.getStock() >= itemReq.cantidad()) {
-                product.decreaseStock(itemReq.cantidad());
-            } else if (request.notas() == null || request.notas().isBlank()) {
-                throw new BusinessExeption("Stock insuficiente para: " + product.getNombre());
+            // Validar stock disponible
+            if (product.getStock() < itemReq.cantidad()) {
+                throw new BusinessExeption("Stock insuficiente para: " + product.getNombre() +
+                        " (Disponible: " + product.getStock() + ", Solicitado: " + itemReq.cantidad() + ")");
             }
 
+            // Decrementar stock
+            product.decreaseStock(itemReq.cantidad());
+
+            // Agregar item a la orden
             OrderItem item = new OrderItem(product, itemReq.cantidad());
-            order.addItem(item);  // ← Esto llama a recalculateTotal()
+            order.addItem(item);
         });
 
         // Actualizar notas
@@ -203,6 +212,7 @@ public class OrderServiceImpl implements OrdenService {
         Order updatedOrder = ordenRepository.save(order);
         return orderMapper.toResponse(updatedOrder);
     }
+
 
     @Override
     public List<OrderResponse> findByEstado(OrdenStatus estado) {
