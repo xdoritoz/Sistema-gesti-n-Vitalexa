@@ -6,7 +6,6 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- ✅ SPRING BOOT ESTABLE PARA JAVA 17 -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -17,23 +16,29 @@
     <groupId>org.example</groupId>
     <artifactId>Sistema_gestion_vitalexa</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <name>Sistema Gestion Vitalexa</name>
+    <description>Sistema de gestión de inventario y ventas</description>
 
     <properties>
         <java.version>17</java.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <!-- ✅ YA LO TIENES - PERFECTO -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- ✅ AGREGAR PARA COMPILACIÓN -->
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <maven.test.skip>true</maven.test.skip>
     </properties>
 
     <dependencies>
 
+        <!-- COMMONS IO -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.11.0</version>
         </dependency>
-
 
         <!-- WEB -->
         <dependency>
@@ -87,12 +92,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Security -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-
         <!-- JWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -112,7 +111,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- WebSocket para notificaciones en tiempo real -->
+        <!-- WebSocket -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
@@ -140,7 +139,12 @@
             <version>5.8</version>
         </dependency>
 
-
+        <!-- ✅ AGREGAR: Cloudinary para imágenes en producción -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.36.0</version>
+        </dependency>
 
     </dependencies>
 
@@ -155,39 +159,42 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
+                    <encoding>UTF-8</encoding>
                     <annotationProcessorPaths>
-
                         <!-- LOMBOK -->
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                             <version>1.18.30</version>
                         </path>
-
                         <!-- MAPSTRUCT -->
                         <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
                             <version>${mapstruct.version}</version>
                         </path>
-
-                        <!-- 🔥 LOMBOK + MAPSTRUCT FIX -->
+                        <!-- LOMBOK + MAPSTRUCT FIX -->
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok-mapstruct-binding</artifactId>
                             <version>0.2.0</version>
                         </path>
-
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
-            <!-- SPRING BOOT -->
+            <!-- ✅ AGREGAR: Maven Resources Plugin para UTF-8 -->
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                    <propertiesEncoding>UTF-8</propertiesEncoding>
+                </configuration>
             </plugin>
 
+            <!-- SPRING BOOT PLUGIN -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -201,10 +208,9 @@
                 </configuration>
             </plugin>
 
-
-
         </plugins>
-        <finalName>Sistema-gesti-n-Vitalexa</finalName>
+        <!-- ✅ CAMBIAR: finalName sin espacios ni caracteres especiales -->
+        <finalName>vitalexa-backend</finalName>
     </build>
 
 </project>
