@@ -1,0 +1,7 @@
+# Asegurar que mvnw tenga line endings correctos (LF, no CRLF)
+mvnw text eol=lf
+*.sh text eol=lf
+
+# Windows batch files
+*.cmd text eol=crlf
+*.bat text eol=crlf
