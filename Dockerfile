@@ -9,8 +9,8 @@ RUN mvn dependency:go-offline -B
 # Copiar código fuente
 COPY src ./src
 
-# Compilar sin tests
-RUN mvn clean package -DskipTests -B
+# Compilar sin tests CON encoding UTF-8 explícito
+RUN mvn clean package -DskipTests -B -Dproject.build.sourceEncoding=UTF-8 -Dproject.reporting.outputEncoding=UTF-8
 
 # Etapa 2: Runtime
 FROM eclipse-temurin:17-jre-alpine
@@ -20,14 +20,10 @@ WORKDIR /app
 COPY --from=build /build/target/vitalexa-backend.jar app.jar
 
 # Variables de entorno
-ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseContainerSupport"
+ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseContainerSupport -Dfile.encoding=UTF-8"
 
 # Exponer puerto
 EXPOSE 8080
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/health || exit 1
 
 # Comando de inicio
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=$PORT -Dspring.profiles.active=prod -jar app.jar"]
