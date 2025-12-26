@@ -17,11 +17,10 @@ public class UserDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        createOrUpdate("DueñoArnold", "12345", Role.OWNER);
-        createOrUpdate("AdminHilary", "12345", Role.ADMIN);
-        createOrUpdate("vendedor", "1234", Role.VENDEDOR);
-        createOrUpdate("Marcelo", "1234", Role.VENDEDOR);
-        createOrUpdate("carlos", "1234", Role.VENDEDOR);
+        createOrUpdate("DueñoArnold", "Azb:iasN", Role.OWNER);
+        createOrUpdate("AdminHilary", "OL98Jaika", Role.ADMIN);
+        createOrUpdate("nina", "ninori123jam", Role.VENDEDOR);
+        createOrUpdate("rosario", "1234", Role.VENDEDOR);
     }
 
     private void create(String username, String password, Role role) {
