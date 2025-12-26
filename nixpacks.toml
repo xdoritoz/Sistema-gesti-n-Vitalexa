@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["maven", "jdk17"]
+
+[phases.install]
+cmds = ["echo 'Install phase'"]
+
+[phases.build]
+cmds = ["mvn clean package -DskipTests"]
+
+[start]
+cmd = "java -Xmx512m -Xms256m -Dserver.port=$PORT -Dspring.profiles.active=prod -jar target/vitalexa-backend.jar"
