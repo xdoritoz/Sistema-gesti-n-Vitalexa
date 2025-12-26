@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.sistema_gestion_vitalexa.security.jwt.JwtAuthenticationEntryPoint;
 import org.example.sistema_gestion_vitalexa.security.jwt.JwtAuthenticationFilter;
 import org.example.sistema_gestion_vitalexa.service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,18 +34,26 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint entryPoint;
     private final CustomUserDetailsService customUserDetailsService;
 
+    // Lee orígenes permitidos desde application.properties
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    private String allowedOriginsStr;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                // ✅ AGREGADO: Configuración CORS explícita
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint))
                 .authorizeHttpRequests(auth -> auth
+                        // Rutas públicas
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("OPTIONS", "/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/images/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        // Preflight requests
+                        .requestMatchers("OPTIONS", "/**").permitAll()
+                        // Todas las demás requieren autenticación
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
@@ -52,37 +61,34 @@ public class SecurityConfig {
                 .build();
     }
 
-    // ✅ NUEVO: Bean de configuración CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Lista de orígenes permitidos (desarrollo)
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://localhost:8081"
-        ));
+        // Convertir string separado por comas a lista
+        List<String> allowedOrigins = Arrays.asList(allowedOriginsStr.split(","));
+        configuration.setAllowedOrigins(allowedOrigins);
 
         // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList(
                 "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
         ));
 
-        // Headers permitidos
+        // Headers permitidos (todos)
         configuration.setAllowedHeaders(Arrays.asList("*"));
 
         // Headers expuestos al cliente
         configuration.setExposedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
+                "Content-Length",
                 "X-Total-Count"
         ));
 
-        // Permitir credenciales (cookies, tokens)
+        // Permitir credenciales (cookies, authorization headers)
         configuration.setAllowCredentials(true);
 
-        // Tiempo de cache de la configuración CORS
+        // Cache de preflight requests (1 hora)
         configuration.setMaxAge(3600L);
 
         // Aplicar configuración a todas las rutas
