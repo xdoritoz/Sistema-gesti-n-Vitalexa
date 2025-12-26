@@ -1,0 +1,1 @@
+﻿web: java -Dserver.port=$PORT -Dspring.profiles.active=prod -Dfile.encoding=UTF-8 -jar target/vitalexa-backend.jar
