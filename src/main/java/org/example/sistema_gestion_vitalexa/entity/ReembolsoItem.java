@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.UUID;
 
 @Entity
@@ -18,7 +17,8 @@ import java.util.UUID;
 public class ReembolsoItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)  // ✅ CAMBIO AQUÍ
+    @Column(columnDefinition = "UUID")
     private UUID id;
 
     @ManyToOne

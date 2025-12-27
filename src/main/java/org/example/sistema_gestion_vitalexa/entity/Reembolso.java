@@ -19,7 +19,8 @@ import java.util.UUID;
 public class Reembolso {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)  // ✅ CAMBIO AQUÍ
+    @Column(columnDefinition = "UUID")
     private UUID id;
 
     @ManyToOne
@@ -37,7 +38,7 @@ public class Reembolso {
     private String notas;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private EstadoReembolso estado;
 
     @PrePersist
