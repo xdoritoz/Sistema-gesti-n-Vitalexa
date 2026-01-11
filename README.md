@@ -1,30 +1,41 @@
 # Sistema de Gestión Vitalexa – Backend
 
-Backend empresarial desarrollado en **Java + Spring Boot** para la gestión integral de **ventas, inventario, clientes y métricas**, con control de acceso por roles, autenticación JWT y exportación de reportes.
+Backend empresarial desarrollado en **Java 17 + Spring Boot**, orientado a la gestión de **órdenes, inventario, clientes y métricas**, con control de acceso por roles, autenticación JWT y arquitectura modular preparada para entornos productivos.
 
 ---
 
-## 📌 Características principales
+## 🎯 Objetivo del proyecto
 
-- Arquitectura modular basada en roles
-- Gestión de órdenes **end-to-end**
-- CRM básico para clientes
-- Inventario en tiempo real
-- Facturación automática en PDF
-- Reportes ejecutivos y exportación (PDF / Excel / CSV)
-- Comunicación en tiempo real con **WebSockets**
-- Seguridad basada en **JWT + Spring Security**
+Diseñar e implementar un backend **escalable, mantenible y seguro**, aplicando buenas prácticas de arquitectura, separación de responsabilidades y control de acceso, simulando un entorno real de PyME.
 
 ---
 
-## 🧠 Arquitectura y stack técnico
+## 🧱 Arquitectura y principios
+
+- Arquitectura por capas:
+  - Controller
+  - Service
+  - Repository
+- Separación clara entre:
+  - Entidades
+  - DTOs
+  - Lógica de negocio
+- Principios aplicados:
+  - Clean Code
+  - SOLID
+  - RESTful APIs
+- Diseño orientado a roles y flujos reales de negocio
+
+---
+
+## ⚙️ Stack tecnológico
 
 ### Backend
-- **Java 17+**
-- **Spring Boot**
+- Java 17
+- Spring Boot
 - Spring Security + JWT
-- Spring Data JPA
-- MapStruct (Entity ⇆ DTO)
+- Spring Data JPA (Hibernate)
+- MapStruct (mapeo Entity ⇆ DTO)
 - Lombok
 - PostgreSQL
 - Flyway / Liquibase (migraciones)
@@ -32,7 +43,20 @@ Backend empresarial desarrollado en **Java + Spring Boot** para la gestión inte
 ### Infraestructura
 - Docker
 - Railway (deploy backend)
-- Configuración por entornos (`dev`, `prod`)
+- Configuración por perfiles (`dev`, `prod`)
+
+---
+
+## 🔐 Seguridad
+
+- Autenticación basada en JWT
+- Autorización por roles:
+  - `ADMIN`
+  - `OWNER`
+  - `VENDEDOR`
+  - `EMPACADOR`
+- Protección de endpoints mediante `@PreAuthorize`
+- Manejo centralizado de errores y validaciones
 
 ---
 
@@ -57,138 +81,68 @@ src/main/java/org/example/sistema_gestion_vitalexa
 ├── repository
 ├── security
 └── service
-src/main/resources
-├── application.properties
-├── application-dev.properties
-├── application-prod.properties
-├── db/migration
-└── static/images
+
 
 ---
 
-## 🔐 Seguridad y autenticación
+## 🔄 Flujo principal de negocio
 
-- Autenticación basada en **JWT**
-- Control de acceso por roles:
-  - `ADMIN`
-  - `OWNER`
-  - `VENDEDOR`
-  - `EMPACADOR`
-- Filtros y configuración en el módulo `security`
-
----
-
-## 📅 Convenciones generales
-
-- Prefijo global: `/api`
-- Fechas en reportes: `yyyy-MM-dd` (ISO DATE)
-- Descargas y previews:
-  - `Content-Disposition: attachment` → descarga
-  - `Content-Disposition: inline` → vista en navegador
+1. El **Vendedor** crea una orden.
+2. El **Administrador** valida y confirma.
+3. El sistema:
+   - Actualiza inventario
+   - Genera factura PDF
+   - Actualiza métricas y metas
+4. El **Owner** analiza reportes y rendimiento.
+5. El **Empacador** gestiona devoluciones controladas.
 
 ---
 
-## 🔑 Autenticación
+## 📡 API REST (resumen)
 
-### AuthController – `/api/auth`
+- Autenticación JWT (`/api/auth`)
+- Gestión de órdenes (admin, owner, vendedor)
+- Gestión de productos e inventario
+- CRM básico
+- Metas de ventas por usuario
+- Reportes analíticos
+- Exportación de datos (PDF / Excel / CSV)
+- Servicio público de imágenes
 
-| Método | Endpoint | Descripción |
-|------|--------|------------|
-| POST | `/login` | Autenticación y generación de JWT |
-
----
-
-## 👑 ADMIN / OWNER
-
-### Clientes – `/api/admin/clients`
-- Obtener listado completo de clientes
-
-### Órdenes – `/api/admin/orders`
-- Listar, consultar, editar y cambiar estado
-- Descargar o previsualizar factura en PDF
-
-### Productos – `/api/admin/products`
-- CRUD completo
-- Manejo de imágenes (`multipart/form-data`)
-- Soft delete / Hard delete
-- Activación y desactivación de productos
-
-### Metas de ventas – `/api/admin/sale-goals`
-- Gestión completa de metas
-- Consulta por mes y año
+📄 **Documentación completa de endpoints** incluida en este repositorio.
 
 ---
 
-## 👔 OWNER
+## 📊 Reportes y exportaciones
 
-### Órdenes – `/api/owner/orders`
-- Consulta general, pendientes y completadas
-
-### Productos – `/api/owner/products`
-- Control de inventario
-- Alertas de bajo stock
-
-### Metas de ventas – `/api/owner/sale-goals`
-
-### Reportes – `/api/owner/reports`
-- Ventas
-- Productos
-- Clientes
-- Vendedores
-- Reporte completo del negocio
+- Reportes por rango de fechas (ISO `yyyy-MM-dd`)
+- Reportes:
+  - Ventas
+  - Productos
+  - Clientes
+  - Vendedores
+- Exportación en:
+  - PDF
+  - Excel
+  - CSV
+- Manejo de headers HTTP (`Content-Disposition`)
 
 ---
 
-## 🧑‍💼 VENDEDOR
+## 🚀 Despliegue
 
-### Clientes – `/api/vendedor/clients`
-- Crear y gestionar clientes
-
-### Órdenes – `/api/vendedor/orders`
-- Crear órdenes
-- Consultar historial propio
-
-### Productos – `/api/vendedor/products`
-- Consulta de productos activos
-
-### Metas – `/api/vendedor/sale-goals`
-- Meta actual
-- Historial de metas
-
----
-
-## 📦 EMPACADOR
-
-### Empacador – `/api/empacador`
-- Visualización de productos disponibles
-- Gestión de reembolsos
-- Registro y trazabilidad de operaciones
-
----
-
-## 🖼️ Servicio de imágenes (público)
-
-### `/api/images/products/{filename}`
-- Servido dinámico de imágenes
-- Soporte para visualización directa en navegador
-
----
-
-## 📤 Exportación de reportes (ADMIN)
-
-- PDF
-- Excel
-- CSV
-
-Endpoints bajo `/api/reports/export/*`
+- Contenerizado con Docker
+- Desplegado en Railway
+- Preparado para CI/CD
+- Configuración externa mediante variables de entorno
 
 ---
 
 ## 👨‍💻 Autor
 
 **José Alberto Méndez Domínguez**  
-Ingeniería de Software  
-📍 Santa Marta, Colombia  
+Estudiante de Ingeniería de Software (8° semestre)  
+Backend Developer – Java & Spring Boot  
+Santa Marta, Colombia
 
----
 
