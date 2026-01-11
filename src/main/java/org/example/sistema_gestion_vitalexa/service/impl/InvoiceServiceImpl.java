@@ -114,7 +114,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .setMarginBottom(20);
         document.add(slogan);
 
-        // ✅ LÍNEA SEPARADORA CORREGIDA
+
         SolidLine lineDrawer = new SolidLine();
         lineDrawer.setColor(BRAND_COLOR);
         lineDrawer.setLineWidth(2f);
@@ -261,7 +261,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private void addFooter(Document document) {
         document.add(new Paragraph("\n"));
 
-        // ✅ LÍNEA SEPARADORA CORREGIDA
+
         SolidLine lineDrawer = new SolidLine();
         lineDrawer.setColor(ColorConstants.LIGHT_GRAY);
         lineDrawer.setLineWidth(1f);

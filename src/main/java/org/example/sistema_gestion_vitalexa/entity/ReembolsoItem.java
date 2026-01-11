@@ -17,7 +17,7 @@ import java.util.UUID;
 public class ReembolsoItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)  // ✅ CAMBIO AQUÍ
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "UUID")
     private UUID id;
 

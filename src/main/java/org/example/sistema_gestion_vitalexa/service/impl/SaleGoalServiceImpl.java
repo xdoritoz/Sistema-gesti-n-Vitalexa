@@ -50,7 +50,7 @@ public class SaleGoalServiceImpl implements SaleGoalService {
             throw new BusinessExeption("El usuario debe tener rol VENDEDOR");
         }
 
-        // ✅ PROBLEMA 2 - VALIDAR QUE NO SEA UN MES/AÑO DEL PASADO
+        // VALIDAR QUE NO SEA UN MES/AÑO DEL PASADO
         LocalDate now = LocalDate.now();
         LocalDate targetDate = LocalDate.of(request.year(), request.month(), 1);
         LocalDate firstDayOfCurrentMonth = now.withDayOfMonth(1);
@@ -68,7 +68,7 @@ public class SaleGoalServiceImpl implements SaleGoalService {
             );
         }
 
-        // ✅ PROBLEMA 1 - CALCULAR VENTAS EXISTENTES SOLO SI ES EL MES ACTUAL
+        // CALCULAR VENTAS EXISTENTES SOLO SI ES EL MES ACTUAL
         BigDecimal existingSales = BigDecimal.ZERO;
 
         if (request.year() == now.getYear() && request.month() == now.getMonthValue()) {
@@ -97,7 +97,7 @@ public class SaleGoalServiceImpl implements SaleGoalService {
 
         SaleGoal saved = saleGoalRepository.save(saleGoal);
 
-        log.info("✅ Meta creada para vendedor {} en {}/{} - Meta: ${}, Ventas actuales: ${}",
+        log.info("Meta creada para vendedor {} en {}/{} - Meta: ${}, Ventas actuales: ${}",
                 vendedor.getUsername(), request.month(), request.year(),
                 request.targetAmount(), existingSales);
 

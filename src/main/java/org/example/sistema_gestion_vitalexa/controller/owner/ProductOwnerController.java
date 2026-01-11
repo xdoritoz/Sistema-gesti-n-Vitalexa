@@ -74,7 +74,7 @@ public class ProductOwnerController {
                 imageUrl = imageService.saveImage(image);
             }
 
-            // ← ORDEN CORRECTO
+
             CreateProductRequest request = new CreateProductRequest(
                     nombre,
                     descripcion,
@@ -99,7 +99,7 @@ public class ProductOwnerController {
             @RequestParam(required = false) String descripcion,
             @RequestParam(required = false) String precio,
             @RequestParam(required = false) String stock,
-            @RequestParam(required = false) String reorderPoint,  // ← AGREGAR
+            @RequestParam(required = false) String reorderPoint,
             @RequestParam(required = false) MultipartFile image,
             @RequestParam(required = false) Boolean active) {
         try {

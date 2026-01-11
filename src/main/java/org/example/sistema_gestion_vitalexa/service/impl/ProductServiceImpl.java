@@ -31,7 +31,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = mapper.toEntity(request);
         Product saved = repository.save(product);
 
-        // 🔔 NOTIFICAR CREACIÓN
+        // NOTIFICAR CREACIÓN
         notificationService.sendInventoryUpdate(saved.getId().toString(), "PRODUCT_CREATED");
 
         return mapper.toResponse(saved);
@@ -70,10 +70,10 @@ public class ProductServiceImpl implements ProductService {
 
         Product updated = repository.save(product);
 
-        // ✅ VERIFICAR NIVELES DE STOCK
+        // VERIFICAR NIVELES DE STOCK
         checkStockLevels(updated);
 
-        // 🔔 NOTIFICAR ACTUALIZACIÓN
+        // NOTIFICAR ACTUALIZACIÓN
         notificationService.sendInventoryUpdate(updated.getId().toString(), "PRODUCT_UPDATED");
 
         return mapper.toResponse(updated);
@@ -89,7 +89,7 @@ public class ProductServiceImpl implements ProductService {
         product.setActive(false);
         repository.save(product);
 
-        // 🔔 NOTIFICAR ELIMINACIÓN
+        // NOTIFICAR ELIMINACIÓN
         notificationService.sendInventoryUpdate(id.toString(), "PRODUCT_DELETED");
 
         log.info("Producto eliminado (soft delete) correctamente: {}", id);
@@ -103,7 +103,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Hard deleting producto ID: {}", id);
         repository.deleteById(id);
 
-        // 🔔 NOTIFICAR ELIMINACIÓN
+        // NOTIFICAR ELIMINACIÓN
         notificationService.sendInventoryUpdate(id.toString(), "PRODUCT_DELETED");
 
         log.info("Producto eliminado físicamente: {}", id);
@@ -137,7 +137,7 @@ public class ProductServiceImpl implements ProductService {
         product.setActive(activo);
         repository.save(product);
 
-        // 🔔 NOTIFICAR CAMBIO DE ESTADO
+        // NOTIFICAR CAMBIO DE ESTADO
         notificationService.sendInventoryUpdate(productId.toString(), "PRODUCT_STATUS_CHANGED");
     }
 

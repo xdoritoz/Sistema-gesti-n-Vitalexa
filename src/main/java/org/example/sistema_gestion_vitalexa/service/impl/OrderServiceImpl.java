@@ -77,7 +77,7 @@ public class OrderServiceImpl implements OrdenService {
 
         Order savedOrder = ordenRepository.save(order);
 
-        // ✅ ENVIAR NOTIFICACIÓN DE NUEVA ORDEN
+        // ENVIAR NOTIFICACIÓN DE NUEVA ORDEN
         notificationService.sendNewOrderNotification(
                 savedOrder.getId().toString(),
                 vendedor.getUsername(),
@@ -119,12 +119,12 @@ public class OrderServiceImpl implements OrdenService {
         order.setEstado(nuevoEstado);
         Order updated = ordenRepository.save(order);
 
-        // ✅ ENVIAR NOTIFICACIÓN SI SE COMPLETA
+        // ENVIAR NOTIFICACIÓN SI SE COMPLETA
         if (nuevoEstado == OrdenStatus.COMPLETADO && oldStatus != OrdenStatus.COMPLETADO) {
             notificationService.sendOrderCompletedNotification(id.toString());
             log.info("Orden {} completada, notificación enviada", id);
 
-            // ✅ ACTUALIZAR PROGRESO DE META DEL VENDEDOR
+            // ACTUALIZAR PROGRESO DE META DEL VENDEDOR
             LocalDate fecha = order.getFecha().toLocalDate();
             saleGoalService.updateGoalProgress(
                     order.getVendedor().getId(),
@@ -138,7 +138,7 @@ public class OrderServiceImpl implements OrdenService {
             notificationService.sendOrderCompletedNotification(order.getId().toString());
         }
 
-        // 🔔 NOTIFICAR CAMBIO DE INVENTARIO (las órdenes también afectan stock)
+        // NOTIFICAR CAMBIO DE INVENTARIO (las órdenes también afectan stock)
         notificationService.sendInventoryUpdate(order.getId().toString().toString(), "ORDER_STATUS_CHANGED");
 
         return orderMapper.toResponse(updated);
@@ -180,12 +180,12 @@ public class OrderServiceImpl implements OrdenService {
             throw new BusinessExeption("No se puede editar una orden completada o cancelada");
         }
 
-        // ✅ VALIDAR QUE HAYA ITEMS
+        // VALIDAR QUE HAYA ITEMS
         if (request.items() == null || request.items().isEmpty()) {
             throw new BusinessExeption("La orden debe tener al menos un producto");
         }
 
-        // ✅ RESTAURAR STOCK de items anteriores
+        // RESTAURAR STOCK de items anteriores
         order.getItems().forEach(item -> {
             Product product = item.getProduct();
             product.increaseStock(item.getCantidad());
@@ -194,7 +194,7 @@ public class OrderServiceImpl implements OrdenService {
         // Limpiar items actuales
         order.clearItems();
 
-        // ✅ AGREGAR NUEVOS ITEMS (con validación de stock)
+        // AGREGAR NUEVOS ITEMS (con validación de stock)
         request.items().forEach(itemReq -> {
             Product product = productService.findEntityById(itemReq.productId());
 

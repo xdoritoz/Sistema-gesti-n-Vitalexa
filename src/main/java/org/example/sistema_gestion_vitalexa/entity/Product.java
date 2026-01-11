@@ -63,7 +63,6 @@ public class Product {
     }
 
     //aumentar stock metodo
-    // aumentar stock metodo
     public void increaseStock(int cantidad) {
         if (cantidad <= 0) {
             throw new IllegalArgumentException("Cantidad inválida");

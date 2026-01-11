@@ -96,10 +96,10 @@ public class NotificationServiceImpl implements NotificationService {
         log.error("Alerta: Producto sin stock - {}", productName);
     }
 
-    // ✅ NUEVO: Notificar actualizaciones de inventario
+    // Notificar actualizaciones de inventario
     @Override
     public void sendInventoryUpdate(String productId, String action) {
-        log.info("🔔 Notificando actualización de inventario: {} - Producto ID: {}", action, productId);
+        log.info("Notificando actualización de inventario: {} - Producto ID: {}", action, productId);
 
         // Enviar evento simple para que todos los dashboards refresquen
         InventoryUpdateEvent event = new InventoryUpdateEvent(
@@ -108,12 +108,12 @@ public class NotificationServiceImpl implements NotificationService {
                 System.currentTimeMillis()
         );
 
-        // ✅ ENVIAR A TOPIC DE INVENTARIO (todos los dashboards lo escuchan)
+        // ENVIAR A TOPIC DE INVENTARIO (todos los dashboards lo escuchan)
         messagingTemplate.convertAndSend("/topic/inventory", event);
         log.info("Evento de inventario enviado: {}", action);
     }
 
-    // ✅ NUEVO: Notificar reembolso creado
+    // Notificar reembolso creado
     @Override
     public void sendReembolsoCreated(String reembolsoId, String empacadorName) {
         String title = "Nuevo Reembolso";
@@ -130,7 +130,7 @@ public class NotificationServiceImpl implements NotificationService {
                 data
         );
 
-        // ✅ SOLO PARA ADMIN Y OWNER
+        // SOLO PARA ADMIN Y OWNER
         messagingTemplate.convertAndSend("/topic/admin-owner/notifications", notification);
         log.info("Notificación enviada: Nuevo reembolso {}", reembolsoId);
     }
@@ -149,6 +149,6 @@ public class NotificationServiceImpl implements NotificationService {
         );
     }
 
-    // ✅ DTO para eventos de inventario
+    // DTO para eventos de inventario
     public record InventoryUpdateEvent(String action, String productId, Long timestamp) {}
 }

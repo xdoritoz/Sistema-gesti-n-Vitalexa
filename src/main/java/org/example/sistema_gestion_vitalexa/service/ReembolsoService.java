@@ -21,7 +21,7 @@ public class ReembolsoService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final ProductMapper productMapper;
-    private final NotificationService notificationService; // ✅ AGREGAR
+    private final NotificationService notificationService;
 
     @Transactional
     public ReembolsoResponse crearReembolso(ReembolsoRequest request, String username) {
@@ -54,7 +54,7 @@ public class ReembolsoService {
             producto.setStock(producto.getStock() - itemRequest.getCantidad());
             productRepository.save(producto);
 
-            // 🔔 NOTIFICAR CAMBIO DE STOCK POR REEMBOLSO
+            // NOTIFICAR CAMBIO DE STOCK POR REEMBOLSO
             notificationService.sendInventoryUpdate(producto.getId().toString(), "STOCK_UPDATED");
 
             ReembolsoItem item = ReembolsoItem.builder()
@@ -70,7 +70,7 @@ public class ReembolsoService {
                     producto.getNombre(), itemRequest.getCantidad(), producto.getStock());
         }
 
-        // 🔔 NOTIFICAR NUEVO REEMBOLSO
+        //  NOTIFICAR NUEVO REEMBOLSO
         notificationService.sendReembolsoCreated(reembolso.getId().toString(), empacador.getUsername());
 
         return productMapper.toReembolsoResponse(reembolso);

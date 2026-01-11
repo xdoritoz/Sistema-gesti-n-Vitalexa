@@ -33,7 +33,7 @@ public class SaleGoal {
     private BigDecimal targetAmount;
 
     @Column(nullable = false, precision = 12, scale = 2)
-    @Builder.Default  // ✅ AGREGAR ESTO
+    @Builder.Default
     private BigDecimal currentAmount = BigDecimal.ZERO;
 
     @Column(nullable = false)
@@ -42,19 +42,14 @@ public class SaleGoal {
     @Column(nullable = false)
     private Integer year;
 
-    @CreationTimestamp  // ✅ CAMBIAR A ESTO
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp  // ✅ CAMBIAR A ESTO
+    @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    // ✅ ELIMINAR ESTOS MÉTODOS (ya no son necesarios con las anotaciones de Hibernate)
-    // @PreUpdate
-    // public void preUpdate() {
-    //     this.updatedAt = LocalDateTime.now();
-    // }
 
     /**
      * Calcula el porcentaje de cumplimiento de la meta

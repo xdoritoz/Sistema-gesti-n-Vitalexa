@@ -105,7 +105,7 @@ public class ProductAdminController {
                 }
             }
 
-            // ← AGREGAR VALIDACIÓN DE REORDER POINT
+
             if (reorderPoint != null && !reorderPoint.isBlank()) {
                 try {
                     reorderPointVal = Integer.valueOf(reorderPoint);
@@ -120,15 +120,15 @@ public class ProductAdminController {
                 imageUrl = imageService.saveImage(image);
             }
 
-            // ← ORDEN CORRECTO: nombre, descripcion, precio, stock, reorderPoint, imageUrl, active
+
             UpdateProductRequest request = new UpdateProductRequest(
                     nombre,
                     descripcion,
                     precioVal,
                     stockVal,
-                    reorderPointVal,  // ← Posición 5
-                    imageUrl,         // ← Posición 6
-                    active            // ← Posición 7
+                    reorderPointVal,
+                    imageUrl,
+                    active
             );
 
             ProductResponse response = productService.update(id, request);
@@ -155,7 +155,7 @@ public class ProductAdminController {
             @RequestParam(required = false) String descripcion,
             @RequestParam(required = false) String precio,
             @RequestParam(required = false) String stock,
-            @RequestParam(required = false) String reorderPoint,  // ← AGREGAR AQUÍ
+            @RequestParam(required = false) String reorderPoint,
             @RequestParam(required = false) MultipartFile image,
             @RequestParam(required = false) Boolean active) {
         return update(id, nombre, descripcion, precio, stock, reorderPoint, image, active);

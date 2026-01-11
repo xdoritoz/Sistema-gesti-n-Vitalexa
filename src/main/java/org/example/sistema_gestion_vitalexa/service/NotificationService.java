@@ -8,8 +8,6 @@ public interface NotificationService {
     void sendOrderCompletedNotification(String orderId);
     void sendLowStockAlert(String productId, String productName, int currentStock, int reorderPoint);
     void sendOutOfStockAlert(String productId, String productName);
-
-    // ✅ NUEVOS MÉTODOS PARA INVENTARIO
     void sendInventoryUpdate(String productId, String action);
     void sendReembolsoCreated(String reembolsoId, String empacadorName);
 

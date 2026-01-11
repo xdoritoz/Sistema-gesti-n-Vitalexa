@@ -37,7 +37,6 @@ public class Client {
     private boolean active = true;
 
 
-    // ✅ ARREGLAR ESTE MÉTODO
     public void registerPurchase(BigDecimal monto) {
         // Verificar que totalCompras no sea null antes de sumar
         if (this.totalCompras == null) {

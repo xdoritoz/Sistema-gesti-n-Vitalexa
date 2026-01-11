@@ -34,7 +34,7 @@ public class ImageController {
                     .normalize()
                     .resolve(filename);
 
-            log.debug("🔍 Buscando imagen en: {}", filePath);
+            log.debug("Buscando imagen en: {}", filePath);
 
             // Verificar que el archivo existe y es legible
             if (!Files.exists(filePath)) {
@@ -43,7 +43,7 @@ public class ImageController {
             }
 
             if (!Files.isReadable(filePath)) {
-                log.error("❌ Imagen no legible: {}", filename);
+                log.error("Imagen no legible: {}", filename);
                 return ResponseEntity.status(403).build();
             }
 
@@ -56,7 +56,7 @@ public class ImageController {
                 contentType = "application/octet-stream";
             }
 
-            log.debug("✅ Sirviendo imagen: {} (tipo: {})", filename, contentType);
+            log.debug("Sirviendo imagen: {} (tipo: {})", filename, contentType);
 
             // Retornar imagen
             return ResponseEntity.ok()
@@ -65,7 +65,7 @@ public class ImageController {
                     .body(resource);
 
         } catch (Exception e) {
-            log.error("❌ Error sirviendo imagen: {}", filename, e);
+            log.error("Error sirviendo imagen: {}", filename, e);
             return ResponseEntity.internalServerError().build();
         }
     }

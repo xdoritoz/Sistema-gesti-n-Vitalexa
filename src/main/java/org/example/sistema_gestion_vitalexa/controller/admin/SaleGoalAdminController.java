@@ -82,7 +82,7 @@ public class SaleGoalAdminController {
     }
 
     /**
-     * ✅ ENDPOINT FALTANTE: Ver todos los vendedores con su meta del mes actual
+     * Ver todos los vendedores con su meta del mes actual
      */
     @GetMapping("/vendedores")
     public ResponseEntity<List<VendedorWithGoalResponse>> findAllVendedoresWithCurrentGoal() {

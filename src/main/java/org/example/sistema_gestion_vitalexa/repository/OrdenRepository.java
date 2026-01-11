@@ -22,7 +22,7 @@ public interface OrdenRepository extends JpaRepository <Order, UUID> {
     List<Order> findByCliente(Client client);
 
     /**
-     * ✅ NUEVO: Buscar órdenes completadas de un vendedor en un mes/año específico
+     * Buscar órdenes completadas de un vendedor en un mes/año específico
      */
     @Query("""
         SELECT o FROM Order o 
